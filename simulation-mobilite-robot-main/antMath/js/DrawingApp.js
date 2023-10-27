@@ -6,6 +6,7 @@ var DrawingApp = /** @class */ (function () {
         this.clickX = new Array();  //Stock the position X when clicking with the mouse
         this.clickY = new Array();  //Stock the position Y when clicking with the mouse
         this.clickDrag = [];        //Stock the position (X,Y) when dragging with the mouse
+        this.listeObjet = [];
 
         //Handler event
         this.clearEventHandler = function () {   //Reset the canvas and all point save in variables X,Y,Drag
@@ -35,6 +36,7 @@ var DrawingApp = /** @class */ (function () {
                     e.pageY;
                 mouseX -= _this.canvas.offsetLeft;
                 mouseY -= _this.canvas.offsetTop;
+
                 _this.paint = true;
                 _this.addClick(mouseX, mouseY, false);
                 _this.redraw();
@@ -44,6 +46,7 @@ var DrawingApp = /** @class */ (function () {
         this.dragEventHandler = function (e) {
             console.log("dragEventHandler");
             if (draw) {
+                
                 var mouseX = e.changedTouches ?
                     e.changedTouches[0].pageX :
                     e.pageX;
@@ -52,6 +55,21 @@ var DrawingApp = /** @class */ (function () {
                     e.pageY;
                 mouseX -= _this.canvas.offsetLeft;
                 mouseY -= _this.canvas.offsetTop;
+
+                 //Test collision
+                 for (var objet of objets) {
+                    if (
+                      mouseX >= objet.x &&
+                      mouseX <= objet.x + objet.width &&
+                      mouseY >= objet.y &&
+                      mouseY <= objet.y + objet.height
+                    ) {
+                      console.log("Collision avec un objet");
+                      _this.clearCanvas(objets);
+                    }
+                }
+                 //Fin test collision
+
                 if (_this.paint) {
                     _this.addClick(mouseX, mouseY, true);
                     _this.redraw();
@@ -66,6 +84,17 @@ var DrawingApp = /** @class */ (function () {
         canvas.height = document.getElementById("playPanel").offsetHeight;
         //canvas.style.width = document.getElementById("playPanel").offsetWidth;
         //canvas.style.height = document.getElementById("playPanel").offsetHeight;
+
+        //Multiple object
+        var h = canvas.height;
+        var w = canvas.width; 
+        var dist = 3;
+        var objets = [];
+        for(var i = 0; i < 10; i++){
+            var obstacle = new Obstacle(Math.random() * w, Math.random() * h, 100, 100);
+            objets.push({x : obstacle.x, y: obstacle.y, width: obstacle.width, height: obstacle.height });
+            obstacle.draw(document.getElementById("playGround").getContext("2d"));
+        }
     
         
         var context = canvas.getContext("2d");
@@ -119,12 +148,16 @@ var DrawingApp = /** @class */ (function () {
         this.clickY.push(y);
         this.clickDrag.push(dragging);
     };
-    DrawingApp.prototype.clearCanvas = function () {
+    DrawingApp.prototype.clearCanvas = function (objets) {
         console.log("ok");
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.clickX = [];
         this.clickY = [];
         this.clickDrag = [];
+        for(var i = 0; i < objets.length; i++){
+            var obstacle = new Obstacle(objets[i].x, objets[i].y, objets[i].width, objets[i].height);
+            obstacle.draw(document.getElementById("playGround").getContext("2d"));
+        }
     };
     //remove the current first point of the draw
     DrawingApp.prototype.removeFirstOne = function () {

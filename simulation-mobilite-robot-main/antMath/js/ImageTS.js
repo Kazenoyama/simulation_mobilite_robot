@@ -106,7 +106,6 @@ function drawHandler() {
         draw = false;
 
         orientationDrawVertical = (window.innerHeight > window.innerWidth) ? true : false;
-
         //add the first ant at the begining and on the page
         firstAnt.move(d.clickX[0], d.clickY[0]);
         document.getElementById("playPanel").appendChild(firstAnt.img);
@@ -123,6 +122,8 @@ function drawHandler() {
         //start main prg, with the speed choosen by the user
         // saveFirstDrawApp.context = context;
 
+        
+
         setTimeout(startAnts, 10, firstAnt, d, firstX, firstY);
     }
 }
@@ -131,9 +132,21 @@ window.onload = function () {
 
     previousOrientation = getOrientation();
 
+    /*
+    var h = 1000
+    var w = 1000 
+    var objets = [];
+    for(var i = 0; i < 10; i++){
+        var obstacle = new Obstacle(Math.random() * w, Math.random() * h, 100, 100);
+        objets.push({x : obstacle.x, y : obstacle.y, width : obstacle.width, height : obstacle.height});
+    }
+*/
     //create canvas and set background
-    CreateO = new CreateObstacle();
-    d = new DrawingApp(CreateO.listeColision);
+    d = new DrawingApp();
+
+    var canvas = document.getElementById("playGround");
+    var context = canvas.getContext("2d");
+    
     
     //creation of the chart
     var canvasCurve = document.getElementById('curve');
@@ -179,10 +192,6 @@ window.onload = function () {
             }
         }
     });
-
-    // saveFirstDrawApp = new DrawingApp();
-    Object.assign(saveFirstDrawApp, d);
-    saveFirstDrawApp.redraw = d.redraw;
 
     // TWO handlers : one for PC, one for smartphone
 
@@ -331,6 +340,8 @@ const DELTA_MIN = 0.002;
  * @param {number} firstY coord of thestart of  path
  */
 function startAnts(First, Space, firstX, firstY) {
+
+    //
 
     //create an ant if none are left
     if (futurAnts.length == 0) {

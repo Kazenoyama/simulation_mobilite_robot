@@ -23,6 +23,8 @@ function changeAntSpeed() {
 function resetDraw(element) {
     location.reload();
 }
+
+//Pause the animation
 function pauseDraw(element) {
     if (isGameStopped) {
         isGameStopped = false;
@@ -34,6 +36,7 @@ function pauseDraw(element) {
         document.getElementById('stopButton').innerText = TRAD.startButton[language];
     }
 }
+
 function drawPath(element) {
     
     for (var i_1 = 0; i_1 < canvasTab.length; i_1++) {
@@ -44,6 +47,7 @@ function drawPath(element) {
         canvasTab[parseInt(element.value)].style.opacity = '1';
     }
 }
+
 function drawMainPaths(element) {
     drawAllPathOn = !drawAllPathOn;
     for (var i_2 = 0; i_2 < canvasTab.length; i_2++) {
@@ -55,6 +59,7 @@ function drawMainPaths(element) {
         }
     }
 }
+
 function drawAllPaths(element) {
     
     let limite = (canvasTab.length < 1000) ? canvasTab.length : 1000;
@@ -70,6 +75,8 @@ function drawAllPaths(element) {
         }
     }
 }
+
+
 
 
 function createGIF() {
@@ -177,5 +184,3 @@ function createGIF() {
         
     }
 }
-
-

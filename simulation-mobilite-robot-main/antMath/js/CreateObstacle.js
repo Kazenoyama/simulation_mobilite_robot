@@ -69,9 +69,9 @@ var CreateObstacle = /**@class */ function(){
       height: randomH,
     };
 
-    listeObstacle.push(obstacle);
+    this.listeObstacle.push(obstacle);
     length = length+1;
-    listeColision.push(detectCollision(obstacle,obstacle.x,obstacle.y));
+    this.listeColision.push(detectCollision(obstacle,obstacle.x,obstacle.y));
 
     drawObstacle();
   });
@@ -87,5 +87,7 @@ var CreateObstacle = /**@class */ function(){
   function clearCanvas(x,y,w,h) {
     ctx.clearRect(x,y,w,h);
   }
+
+  return CreateObstacle;
 
 }
