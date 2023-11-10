@@ -50,9 +50,8 @@ var Ant = /** @class */ (function () {
             if (
                 distance < objet.radius 
             ) {
-              console.log("Collision avec fourmi");
-              this.speedX = 0.1;
-              this.speedY = 0.5;
+              console.log("Collision avec fourmi sans couleur");
+              this.setSpeed(Ant,objet);
             }
         }
 
@@ -69,8 +68,8 @@ var Ant = /** @class */ (function () {
     Ant.prototype.followN = function (x, y, ob) {
         var dx = x - this.x;
         var dy = y - this.y;
-        console.log(x,y)
-        console.log(this.x,this.y)
+        //console.log(x,y)
+        //console.log(this.x,this.y)
         if (Math.max(Math.abs(dx), Math.abs(dy)) >= speedAnt) {
             this.speedX = dx / Math.max(Math.abs(dx), Math.abs(dy)) * speedAnt;
             this.speedY = dy / Math.max(Math.abs(dx), Math.abs(dy)) * speedAnt;
@@ -117,7 +116,6 @@ var Ant = /** @class */ (function () {
     Ant.prototype.followEnd = function (Ant, ob) {
         var dx = Ant.x - this.x;
         var dy = Ant.y - this.y;
-        var verifcollision = false;
         //console.log(this.getPositionWithoutPx(this.img.style.left), this.getPositionWithoutPx(this.img.style.top));
         var positionX = this.getPositionWithoutPx(this.img.style.left);
         var positionY = this.getPositionWithoutPx(this.img.style.top);
@@ -140,8 +138,8 @@ var Ant = /** @class */ (function () {
                 distance < objet.radius 
             ) {
               console.log("Collision avec fourmi");
-              this.speedX = 0;
-              this.speedY = 0.5;
+              this.setSpeed(Ant,objet);
+
             }
         }
         if (dx < 0) {
@@ -160,9 +158,9 @@ var Ant = /** @class */ (function () {
         
     };
 
-    Ant.prototype.getPositionWithoutPx = function (pxCoord) {
-        return parseInt(pxCoord,10);
-    };
+    //Rajout de fonction
+
+    Ant.prototype.getPositionWithoutPx = function (pxCoord) {return parseInt(pxCoord,10);};
 
     Ant.prototype.getPointCircle = function(objet){
         var point = [];
@@ -174,28 +172,6 @@ var Ant = /** @class */ (function () {
             point.push({x: x, y: y});
         }
         return point;
-    }
-
-    Ant.prototype.test = function (x, y) {
-        var dx = x - this.x;
-        var dy = y - this.y;
-        if (Math.max(Math.abs(dx), Math.abs(dy)) >= speedAnt) {
-            this.speedX = dx / Math.max(Math.abs(dx), Math.abs(dy)) * speedAnt;
-            this.speedY = dy / Math.max(Math.abs(dx), Math.abs(dy)) * speedAnt;
-        }
-        else {
-            this.speedX = dx;
-            this.speedY = dy;
-        }
-        var angl = Math.atan(dy / dx) * 180 / Math.PI;
-
-        if (dx < 0) {
-            this.img.style.transform = 'translateX(' + -50 + '%) translateY(' + -50 + '%) rotate(' + (-90 + angl) + 'deg) ';
-        }
-        else {
-            this.img.style.transform = 'translateX(' + -50 + '%) translateY(' + -50 + '%) rotate(' + ((-90 - angl) * (-1)) + 'deg) ';
-        }
-        this.move(this.x + this.speedX, this.y + this.speedY);
     };
     
     /*To follow the right path i need to know which part of the circle is better to arrive faster at the destination. For that we just need to know from which point we can have a straight line
@@ -203,7 +179,30 @@ var Ant = /** @class */ (function () {
 
     To DO : function to know the disctance from one point of the circle to the finish
     Adjust the speed of a ant : + if we need to go down, - if we need to go up*/ 
-    
+
+    Ant.prototype.setSpeedY = function(Ant, objet){
+        var speed;
+        if (Ant.y < this.y){
+            speed = -0.5;
+        }
+        else{speed = 0.5}
+        
+        return speed;
+        
+    };
+
+    Ant.prototype.setSpeed = function(Ant, objet){
+
+        //Wants to know if we need to go up or down:
+        this.speedY = this.setSpeedY(Ant, objet);
+        this.speedX = 0;
+
+        if(this.speedY < 0){
+                this.speedX = -0.5;
+            
+        }
+
+    }
 
     return Ant;
 }());

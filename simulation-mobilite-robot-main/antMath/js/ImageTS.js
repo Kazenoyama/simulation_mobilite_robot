@@ -114,6 +114,7 @@ function drawHandler() {
         //Save the first location
         firstX = d.clickX[0];
         firstY = d.clickY[0];
+
         //Print the anthill
         var anthill = new Ant('./img/fourmiliere_cut.png', 50, 50);
         anthill.move(firstX, firstY);
@@ -137,8 +138,8 @@ window.onload = function () {
     //create canvas and set background
     d = new DrawingApp();
     ob = d.getObjets();
-    console.log(ob);
-    
+    //console.log(ob);
+       
     
     //creation of the chart
     var canvasCurve = document.getElementById('curve');

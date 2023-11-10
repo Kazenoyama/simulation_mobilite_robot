@@ -19,8 +19,6 @@ var DrawingApp = /** @class */ (function () {
             console.log("releaseEventHandler");
             _this.paint = false;
             _this.redraw();
-            this.releaseX = this.clickX[this.clickX.length - 1];
-            this.releaseY = this.clickY[this.clickY.length - 1];
             
         };
 
@@ -181,10 +179,6 @@ var DrawingApp = /** @class */ (function () {
             this.clickY = new Array();
         }
     };
-
-    DrawingApp.prototype.getRelease = function(){
-        return {x : this.releaseX, y : this.releaseY};
-    }
 
     return DrawingApp;
 }());
