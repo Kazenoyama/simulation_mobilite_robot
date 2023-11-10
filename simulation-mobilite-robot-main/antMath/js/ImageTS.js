@@ -80,6 +80,8 @@ let saveFirstDrawApp = Object();
  */
 let orientationDrawVertical;
 
+var ob;
+
 /**
  * Handle the draw of the path made by the user on click / touch screen
  */
@@ -132,20 +134,10 @@ window.onload = function () {
 
     previousOrientation = getOrientation();
 
-    /*
-    var h = 1000
-    var w = 1000 
-    var objets = [];
-    for(var i = 0; i < 10; i++){
-        var obstacle = new Obstacle(Math.random() * w, Math.random() * h, 100, 100);
-        objets.push({x : obstacle.x, y : obstacle.y, width : obstacle.width, height : obstacle.height});
-    }
-*/
     //create canvas and set background
     d = new DrawingApp();
-
-    var canvas = document.getElementById("playGround");
-    var context = canvas.getContext("2d");
+    ob = d.getObjets();
+    console.log(ob);
     
     
     //creation of the chart
@@ -380,7 +372,7 @@ function startAnts(First, Space, firstX, firstY) {
     }
     else {
         //new first follow the never changing First with special function with no slow
-        futurAnts[0].followEnd(First);
+        futurAnts[0].followEnd(First,ob);
         //add a new ant every time the last one is farther than 'spacingAnt'
         if (Math.sqrt((futurAnts[futurAnts.length - 1].x - firstX) * (futurAnts[futurAnts.length - 1].x - firstX) + (futurAnts[futurAnts.length - 1].y - firstY) * (futurAnts[futurAnts.length - 1].y - firstY)) > spacingAnt) {
             if (compter == drawingGap) {
@@ -443,7 +435,7 @@ function startAnts(First, Space, firstX, firstY) {
 
 function delayFirst(Space, First, firstX, firstY) {
     //follow next point on the line
-    First.followN(Space.clickX[0], Space.clickY[0]);
+    First.followN(Space.clickX[0], Space.clickY[0],ob);
     //create a second ant to avoid bugs
     if (futurAnts.length == 0) {
         futurAnts.push(new DrawingAnt('./assets/RedAnt.png', 30, 30, true));

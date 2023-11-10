@@ -7,6 +7,8 @@ var DrawingApp = /** @class */ (function () {
         this.clickY = new Array();  //Stock the position Y when clicking with the mouse
         this.clickDrag = [];        //Stock the position (X,Y) when dragging with the mouse
         this.listeObjet = [];
+        this.releaseX;
+        this.releaseY;
 
         //Handler event
         this.clearEventHandler = function () {   //Reset the canvas and all point save in variables X,Y,Drag
@@ -17,6 +19,9 @@ var DrawingApp = /** @class */ (function () {
             console.log("releaseEventHandler");
             _this.paint = false;
             _this.redraw();
+            this.releaseX = this.clickX[this.clickX.length - 1];
+            this.releaseY = this.clickY[this.clickY.length - 1];
+            
         };
 
         this.cancelEventHandler = function () {
@@ -57,17 +62,18 @@ var DrawingApp = /** @class */ (function () {
                 mouseY -= _this.canvas.offsetTop;
 
                  //Test collision
+                 
                  for (var objet of objets) {
+                    var distance = Math.sqrt(Math.pow(mouseX - objet.centerX, 2) + Math.pow(mouseY - objet.centerY, 2));
                     if (
-                      mouseX >= objet.x &&
-                      mouseX <= objet.x + objet.width &&
-                      mouseY >= objet.y &&
-                      mouseY <= objet.y + objet.height
+                        distance < objet.radius
                     ) {
                       console.log("Collision avec un objet");
                       _this.clearCanvas(objets);
                     }
                 }
+                
+                
                  //Fin test collision
 
                 if (_this.paint) {
@@ -88,13 +94,13 @@ var DrawingApp = /** @class */ (function () {
         //Multiple object
         var h = canvas.height;
         var w = canvas.width; 
-        var dist = 3;
         var objets = [];
         for(var i = 0; i < 10; i++){
-            var obstacle = new Obstacle(Math.random() * w, Math.random() * h, 100, 100);
-            objets.push({x : obstacle.x, y: obstacle.y, width: obstacle.width, height: obstacle.height });
+            var obstacle = new Obstacle(Math.random() * w, Math.random() * h, 75);
+            objets.push({centerX : obstacle.centerX, centerY : obstacle.centerY, radius : obstacle.radius});
             obstacle.draw(document.getElementById("playGround").getContext("2d"));
         }
+        //End multiple object
     
         
         var context = canvas.getContext("2d");
@@ -108,6 +114,11 @@ var DrawingApp = /** @class */ (function () {
         this.context = context;
         this.redraw();
         this.createUserEvents();
+
+        this.getObjets = function(){
+            console.log("getObjets");
+            return objets;
+        }
     }
     //create events
     DrawingApp.prototype.createUserEvents = function () {
@@ -155,7 +166,7 @@ var DrawingApp = /** @class */ (function () {
         this.clickY = [];
         this.clickDrag = [];
         for(var i = 0; i < objets.length; i++){
-            var obstacle = new Obstacle(objets[i].x, objets[i].y, objets[i].width, objets[i].height);
+            var obstacle = new Obstacle(objets[i].centerX, objets[i].centerY, objets[i].radius);
             obstacle.draw(document.getElementById("playGround").getContext("2d"));
         }
     };
@@ -170,6 +181,10 @@ var DrawingApp = /** @class */ (function () {
             this.clickY = new Array();
         }
     };
+
+    DrawingApp.prototype.getRelease = function(){
+        return {x : this.releaseX, y : this.releaseY};
+    }
 
     return DrawingApp;
 }());
