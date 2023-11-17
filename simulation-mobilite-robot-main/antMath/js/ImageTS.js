@@ -80,7 +80,12 @@ let saveFirstDrawApp = Object();
  */
 let orientationDrawVertical;
 
+/**
+ * Liste of object for the ants to avoid
+ */
 var ob;
+
+var endPath;
 
 /**
  * Handle the draw of the path made by the user on click / touch screen
@@ -106,6 +111,8 @@ function drawHandler() {
     // Si path assez long, on dessine
     else if (draw) {
         draw = false;
+        //save end of the path
+        stockEndPath(d.clickX[d.clickX.length - 1], d.clickY[d.clickY.length - 1]);
 
         orientationDrawVertical = (window.innerHeight > window.innerWidth) ? true : false;
         //add the first ant at the begining and on the page
@@ -126,7 +133,6 @@ function drawHandler() {
         // saveFirstDrawApp.context = context;
 
         
-
         setTimeout(startAnts, 10, firstAnt, d, firstX, firstY);
     }
 }
@@ -314,6 +320,11 @@ function handleSize(){
     previousOrientation = currentOrientation;
 }
 
+function stockEndPath(x,y){
+    endPath = {x: x, y: y};
+    console.log(endPath);
+}
+
 window.addEventListener("resize", () => {
 
     handleSize();
@@ -373,7 +384,7 @@ function startAnts(First, Space, firstX, firstY) {
     }
     else {
         //new first follow the never changing First with special function with no slow
-        futurAnts[0].followEnd(First,ob);
+        futurAnts[0].followEnd(First,ob,endPath);
         //add a new ant every time the last one is farther than 'spacingAnt'
         if (Math.sqrt((futurAnts[futurAnts.length - 1].x - firstX) * (futurAnts[futurAnts.length - 1].x - firstX) + (futurAnts[futurAnts.length - 1].y - firstY) * (futurAnts[futurAnts.length - 1].y - firstY)) > spacingAnt) {
             if (compter == drawingGap) {
@@ -422,7 +433,7 @@ function startAnts(First, Space, firstX, firstY) {
         }
         //move all the other ants, from the closest to the farest
         for (var i_6 = 1; i_6 < futurAnts.length; i_6++) {
-            futurAnts[i_6].follow(futurAnts[i_6 - 1]);
+            futurAnts[i_6].follow(futurAnts[i_6 - 1],endPath);
         }
     }
     //repeat the function
@@ -436,7 +447,7 @@ function startAnts(First, Space, firstX, firstY) {
 
 function delayFirst(Space, First, firstX, firstY) {
     //follow next point on the line
-    First.followN(Space.clickX[0], Space.clickY[0],ob);
+    First.followN(Space.clickX[0], Space.clickY[0],ob,endPath);
     //create a second ant to avoid bugs
     if (futurAnts.length == 0) {
         futurAnts.push(new DrawingAnt('./assets/RedAnt.png', 30, 30, true));
@@ -479,9 +490,9 @@ function delayFirst(Space, First, firstX, firstY) {
         compter++;
     }
     //make other ants follow the first
-    futurAnts[0].follow(First);
+    futurAnts[0].follow(First,endPath);
     for (var i_7 = 1; i_7 < futurAnts.length; i_7++) {
-        futurAnts[i_7].follow(futurAnts[i_7 - 1]);
+        futurAnts[i_7].follow(futurAnts[i_7 - 1],endPath);
     }
 }
 
