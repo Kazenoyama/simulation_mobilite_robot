@@ -14,15 +14,16 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 
-var DrawingAnt = /** @class */ (function (_super) {
-    __extends(DrawingAnt, _super);
-    function DrawingAnt(link, x, y, draw) {
+var DirectAnt = /** @class */ (function (_super) {
+    __extends(DirectAnt, _super);
+    function DirectAnt(link, x, y, draw) {
         var _this = _super.call(this, link, x, y) || this;
 
         // Besoin du contexte du canvas dans la  fonction move je sais pas pourquoi
         _this.canvas = document.createElement('canvas');
         // A QUOI SERT CETTE LIGNE ??
         _this.draw = false;
+        _this.direct = true;
 
 
         if (draw &&
@@ -49,7 +50,7 @@ var DrawingAnt = /** @class */ (function (_super) {
     }
 
 
-    DrawingAnt.prototype.move = function (x, y) {
+    DirectAnt.prototype.move = function (x, y) {
         var ctx = this.canvas.getContext('2d');
         this.img.style.left = x + 'px';
         this.img.style.top = y + 'px';
@@ -60,5 +61,5 @@ var DrawingAnt = /** @class */ (function (_super) {
         ctx.stroke();
     };
     
-    return DrawingAnt;
+    return DirectAnt;
 }(Ant));

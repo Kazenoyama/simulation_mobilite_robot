@@ -13,6 +13,8 @@ var Ant = /** @class */ (function () {
         this.img.style.height = y + 'px';
         //this.spX = 0;
         //this.spY = 0.5;
+
+        this.randomDirection = Math.floor(Math.random() * 2);
     }
     //teleport the ant to x and y, update distance and coordonates
     Ant.prototype.move = function (x, y) {
@@ -25,7 +27,7 @@ var Ant = /** @class */ (function () {
         this.distance += Math.sqrt(this.speedX * this.speedX + this.speedY * this.speedY);
     };
     //follow the given ant at with spacingAnt as distance
-    Ant.prototype.follow = function (Ant,end) {
+    Ant.prototype.follow = function (Ant,end,start) {
 
         
         var dx = Ant.x - this.x;
@@ -51,9 +53,8 @@ var Ant = /** @class */ (function () {
             if (
                 distance <= objet.radius 
             ) {
-              console.log("Collision avec fourmi sans couleur");
-              var colCoord = {x: this.x, y: this.y};
-              this.setSpeed(Ant,objet,end,colCoord);
+              //console.log("Collision avec fourmi sans couleur");
+              this.setSpeed(Ant,objet,end,start);
             }
         }
 
@@ -68,6 +69,7 @@ var Ant = /** @class */ (function () {
 
     //follow the path by giving points one by one
     Ant.prototype.followN = function (x, y, ob) {
+        console.log("followN");
         var dx = x - this.x;
         var dy = y - this.y;
         //console.log(x,y)
@@ -82,22 +84,6 @@ var Ant = /** @class */ (function () {
         }
         var angl = Math.atan(dy / dx) * 180 / Math.PI;
 
-        //Test collision avec les obstacles (fourmi de tête)
-        /*
-        var positionX = this.getPositionWithoutPx(this.img.style.left);
-        var positionY = this.getPositionWithoutPx(this.img.style.top);
-        for (var objet of ob) {
-            distance = Math.sqrt(Math.pow(positionX - objet.centerX, 2) + Math.pow(positionY - objet.centerY, 2));
-            if (
-                distance < objet.radius 
-            ) {
-              console.log("Collision avec fourmi de tete");
-              this.setSpeed(Ant,objet);
-            }
-        }*/
-        
-       //End test collision
-
         if (dx < 0) {
             this.img.style.transform = 'translateX(' + -50 + '%) translateY(' + -50 + '%) rotate(' + (-90 + angl) + 'deg) ';
         }
@@ -108,7 +94,7 @@ var Ant = /** @class */ (function () {
     };
 
     //follow the end of the path (for the first ant only)
-    Ant.prototype.followEnd = function (Ant, ob,end) {
+    Ant.prototype.followEnd = function (Ant, ob,end,start) {
         var dx = Ant.x - this.x;
         var dy = Ant.y - this.y;
         //console.log(this.getPositionWithoutPx(this.img.style.left), this.getPositionWithoutPx(this.img.style.top));
@@ -132,8 +118,8 @@ var Ant = /** @class */ (function () {
             if (
                 distance <= objet.radius 
             ) {
-              console.log("Collision avec fourmi");
-              this.setSpeed(Ant,objet,end);
+              //console.log("Collision avec fourmi");
+              this.setSpeed(Ant,objet,end,start);
 
             }
         }
@@ -153,6 +139,48 @@ var Ant = /** @class */ (function () {
         
     };
 
+    Ant.prototype.leader = function(Ant,ob,end,start){
+        var dx = -(this.x - end.x);
+        var dy = -(this.y - end.y);
+        
+        //console.log(this.getPositionWithoutPx(this.img.style.left), this.getPositionWithoutPx(this.img.style.top));
+        var positionX = this.getPositionWithoutPx(this.img.style.left);
+        var positionY = this.getPositionWithoutPx(this.img.style.top);
+        //  console.log(dx, dy)
+        if (Math.max(Math.abs(dx), Math.abs(dy)) >= speedAnt) {
+            this.speedX = dx / Math.max(Math.abs(dx), Math.abs(dy)) * speedAnt;
+            this.speedY = dy / Math.max(Math.abs(dx), Math.abs(dy)) * speedAnt;
+        }
+        else {
+            this.speedX = dx;
+            this.speedY = dy;
+        }
+        var angl = Math.atan(dy / dx) * 180 / Math.PI;
+
+        var positionX = this.getPositionWithoutPx(this.img.style.left);
+        var positionY = this.getPositionWithoutPx(this.img.style.top);
+        for (var objet of ob) {
+            distance = Math.sqrt(Math.pow(positionX - objet.centerX, 2) + Math.pow(positionY - objet.centerY, 2));
+            if (
+                distance <= objet.radius
+            ) {
+              //console.log("Collision avec fourmi");
+              //this.obstacleAura(Ant,objet,end,start);
+              //this.setSpeed(Ant,objet,end,start);
+              this.obstacleAura(Ant,objet,end,start);
+
+            }
+        }
+
+        if (dx < 0) {
+            this.img.style.transform = 'translateX(' + -50 + '%) translateY(' + -50 + '%) rotate(' + (-90 + angl) + 'deg) ';
+        }
+        else {
+            this.img.style.transform = 'translateX(' + -50 + '%) translateY(' + -50 + '%) rotate(' + ((-90 - angl) * (-1)) + 'deg) ';
+        }
+        this.move(this.x + this.speedX, this.y + this.speedY);
+    }
+
     //Rajout de fonction
 
     Ant.prototype.getPositionWithoutPx = function (pxCoord) {return parseInt(pxCoord,10);};
@@ -169,11 +197,19 @@ var Ant = /** @class */ (function () {
         return point;
     };
 
-    Ant.prototype.getAngle = function(Ant,objet,end){
-        const angleRadians = Math.atan2(end.y - objet.centerY, end.x - objet.centerX) - Math.atan2(Ant.y - objet.centerY, Ant.x - objet.centerX);
-        const angleDegrees = (angleRadians * 180) / Math.PI;
-        return angleDegrees;
-    };
+    Ant.prototype.getEntryPoint = function(point){
+        for(var i=0; i < point.length; i++){
+            if(this.getDistanceBetweenPoints(this.x,this.y,point[i].x,point[i].y) <= 5000){
+                return {point: point[i], index: i}};
+            }
+    }
+
+    Ant.prototype.getExitPoint = function(point,end){
+        for(var i=0; i < point.length; i++){
+            if(this.getDistanceBetweenPoints(end.x,end.y,point[i].x,point[i].y) <= 5000){
+                return {point: point[i], index: i}};
+            }
+    }
     
     /*To follow the right path i need to know which part of the circle is better to arrive faster at the destination. For that we just need to know from which point we can have a straight line
     to the finish and then we can decide if we turn clockwise or counter clockwise on the circle.
@@ -191,217 +227,240 @@ var Ant = /** @class */ (function () {
         );
         return distance;}
 
-    Ant.prototype.setSpeedY = function(Ant, objet,end){
-        var speed;
-        /*
-        //Get the distance between 4 different point of the obstacle and the end 
-        var distanceSommet = this.getDistanceBetweenPoints(objet.x,objet.y+objet.radius,end.x,end.y);       //Get the distance between the top of the circle and the end
-        var distanceCoteDroit = this.getDistanceBetweenPoints(objet.x+objet.radius,objet.y,end.x,end.y);    //Get the distance between the right of the circle and the end
-        var distanceBas = this.getDistanceBetweenPoints(objet.x,objet.y-objet.radius,end.x,end.y);          //Get the distance between the bottom of the circle and the end
-        var distanceCoteGauche = this.getDistanceBetweenPoints(objet.x-objet.radius,objet.y,end.x,end.y);   //Get the distance between the left of the circle and the end
-
-        var distanceSommetAnt = this.getDistanceBetweenPoints(objet.x,objet.y+objet.radius,Ant.x,Ant.y);       //Get the distance between the top of the circle and the end
-        var distanceCoteDroitAnt = this.getDistanceBetweenPoints(objet.x+objet.radius,objet.y,Ant.x,Ant.y);    //Get the distance between the right of the circle and the end
-        var distanceBasAnt = this.getDistanceBetweenPoints(objet.x,objet.y-objet.radius,Ant.x,Ant.y);          //Get the distance between the bottom of the circle and the end
-        var distanceCoteGaucheAnt = this.getDistanceBetweenPoints(objet.x-objet.radius,objet.y,Ant.x,Ant.y);   //Get the distance between the left of the circle and the end
-
-        var centerX = objet.centerX;
-        var centerY = objet.centerY;
-        var radius = objet.radius;
-
-        //Version simple
-        //left of the circle
-        //console.log("this.x : ",this.x, "this.y : ",this.y ,"Ant.x : ",Ant.x," Ant.y : ",Ant.y," objet.x : ",objet.centerX," objet.y : ",objet.centerY," objet.radius : ",objet.radius," end.x : ",end.x," end.y : ",end.y);
-        if(this.x < centerX){
-            //Top left of the circle
-            if(this.y >= centerY){
-                 //Going to the top right
-                 if(end.x > centerX && end.y > centerY){speed = -0.5;}
-                 //Going to the bottom right / bottom left
-                 else{speed = 0.5};
-                 //Need to know in which direction we need to go
-            } 
-            //bottom left of the circle   
-            else{
-                //Going bottom right
-                if(this.x > centerX && this.y < centerY){speed = -0.5;}
-                //All other direction
-                else{speed = -0.5;}
-            }
-
-        }
-        //right of the circle
-        else{
-            //Top right of the circle
-            if(Ant.y > centerY){
-                //Going to the top left
-                if(this.x < centerX && this.y > centerY){speed = -0.5;}
-                //
-                else{speed = -0.5};
-                //Need to know in which direction we need to go
-           } 
-           //bottom right of the circle   
-           else{
-               //Going bottom right
-               if(this.x < centerX && this.y < centerY){speed = 0.5;}
-               //All other direction
-               else{speed = 0.5;}
-           }
-        }*/
-
-        
-        if (Ant.y < this.y+objet.radius*2){
-            speed = -0.5;
-        }
-        else{speed = 0.5;}
-        
-        return speed;
-        
-    };
-
-    Ant.prototype.setSpeedX = function(Ant, sY, objet){
-        var speed;
-        //If we need to go up
-        if(sY<0){
-            //If we go left to right
-            if(Ant.x < this.x){
-                if(Ant.x < objet.centerX && Ant.y <= objet.centerY){speed = -0.5;}
-                else{speed = 0.5;}
-            }
-            //if we go rigth to left
-            else{
-                if(Ant.x > objet.centerX && Ant.y <= objet.centerY){speed = 0.5;}
-                else{speed = -0.5;}
-            }   
-        }
-        //If we need to go down
-        else{
-             //If we go left to right
-             if(Ant.x < this.x){
-                if(Ant.x < objet.centerX && Ant.y >= objet.centerY){speed = -0.5;}
-                else{speed = 0.5;}
-            }
-            //if we go rigth to left
-            else{
-                if(Ant.x > objet.centerX && Ant.y >= objet.centerY){speed = 0.5;}
-                else{speed = -0.5;}
-            }
-        }
-        return speed;
-    };
-
     Ant.prototype.setSpeed = function(Ant, objet,end){
-        //console.log(end);
 
-        //Wants to know if we need to go up or down:
-        //this.speedY = this.setSpeedY(Ant, objet,end);
-
-        this.speedY = this.setSpeed2(Ant, objet,end);
-        //this.speedX = this.setSpeedX(Ant, this.speedY, objet);
-
-        //this.setSpeed2(Ant,objet,end);
+        //this.setSpeed3(objet,end);
+        this.setSpeed2(Ant,objet,end);
 
 
     }
 
-    Ant.prototype.setSpeed2 = function(Ant, objet,end){
+    /*
+
+    Ant.prototype.setSpeed3 = function(objet,end){
+        var sp = 0.5;
+        var speed = {x:0,y:0};
+
+                                                    //End of the path right down corner
+        if(end.x > objet.centerX && end.y > objet.centerY){
+            if(this.x < objet.centerX && this.y < objet.centerY){speed = {x:-sp,y:-sp};}                //Up left
+            if(this.x < objet.centerX && this.y > objet.centerY){speed = {x:-sp,y:sp};}                 //Down left
+            if(this.x > objet.centerX && this.y > objet.centerY){speed = {x:sp,y:sp};}                  //Down right
+            if(this.x >= objet.centerX && this.y < objet.centerY){speed = {x:sp,y:-sp};}                 //Up right
+            //Seems to work
+        }
+
+                                                    //End of the path right up corner
+        
+        if(end.x > objet.centerX && end.y < objet.centerY){
+            if(this.x < objet.centerX && this.y < objet.centerY){speed = {x:-sp,y:-sp};}                //Up left
+            if(this.x < objet.centerX && this.y > objet.centerY){speed = {x:-sp,y:sp};}                 //Down left
+            if(this.x > objet.centerX && this.y > objet.centerY){speed = {x:sp,y:sp};}                 //Down right
+            if(this.x > objet.centerX && this.y < objet.centerY){speed = {x:sp,y:-sp};}                 //Up right
+        }
+
+                                                    //End of the path left up corner
+        
+        if(end.x < objet.centerX && end.y < objet.centerY){
+            if(this.x < objet.centerX && this.y < objet.centerY){speed = {x:-sp,y:-sp};}                //Up left
+            if(this.x < objet.centerX && this.y > objet.centerY){speed = {x:sp,y:sp};}                 //Down left
+            if(this.x > objet.centerX && this.y > objet.centerY){speed = {x:sp,y:sp};}                 //Down right
+            if(this.x > objet.centerX && this.y < objet.centerY){speed = {x:sp,y:-sp};}                 //Up right
+        }
+        
+
+                                                    //End of the path left down corner
+        if(end.x < objet.centerX && end.y > objet.centerY){
+            if(this.x < objet.centerX && this.y < objet.centerY){speed = {x:-sp,y:-sp};}                //Up left
+            if(this.x < objet.centerX && this.y > objet.centerY){speed = {x:-sp,y:sp};}                 //Down left
+            if(this.x > objet.centerX && this.y > objet.centerY){speed = {x:sp,y:sp};}                 //Down right
+            if(this.x > objet.centerX && this.y < objet.centerY){speed = {x:sp,y:-sp};}                 //Up right
+        }   
+
+
+
+
+
+        this.speedX = speed.x;
+        this.speedY = speed.y;
+        
+    }*/
+
+    Ant.prototype.setSpeed2 = function(Ant, objet,end,special){
         console.log("setSpeed2");
-        var speed;
-
-        //Get the distance between 4 different point of the obstacle and the end 
-        var distanceSommet = this.getDistanceBetweenPoints(objet.x,objet.y+objet.radius,end.x,end.y);       //Get the distance between the top of the circle and the end
-        var distanceCoteDroit = this.getDistanceBetweenPoints(objet.x+objet.radius,objet.y,end.x,end.y);    //Get the distance between the right of the circle and the end
-        var distanceBas = this.getDistanceBetweenPoints(objet.x,objet.y-objet.radius,end.x,end.y);          //Get the distance between the bottom of the circle and the end
-        var distanceCoteGauche = this.getDistanceBetweenPoints(objet.x-objet.radius,objet.y,end.x,end.y);   //Get the distance between the left of the circle and the end
-
-        var distanceSommetAnt = this.getDistanceBetweenPoints(objet.x,objet.y+objet.radius,this.x,this.y);       //Get the distance between the top of the circle and the ant
-        var distanceCoteDroitAnt = this.getDistanceBetweenPoints(objet.x+objet.radius,objet.y,this.x,this.y);    //Get the distance between the right of the circle and the ant
-        var distanceBasAnt = this.getDistanceBetweenPoints(objet.x,objet.y-objet.radius,this.x,this.y);          //Get the distance between the bottom of the circle and the ant
-        var distanceCoteGaucheAnt = this.getDistanceBetweenPoints(objet.x-objet.radius,objet.y,this.x,this.y);   //Get the distance between the left of the circle and the ant
+        var speed = {x:0,y:0};
+        var sp = 0.5;
 
         var centerX = objet.centerX;
         var centerY = objet.centerY;
-        console.log(this.x,this.y);
-        console.log(centerX,centerY);
+        var radius = objet.radius;
+        
 
-        //this is the Ant we use
-        //Ant is the Ant we want to follow
-        //end is the end of the path
+        //Get the distance between 4 different point of the obstacle and the end
+        
+        var toEnd = {up:this.getDistanceBetweenPoints(centerX,centerY-radius,end.x,end.y),
+            down:this.getDistanceBetweenPoints(centerX,centerY+radius,end.x,end.y),
+            left:this.getDistanceBetweenPoints(centerX - radius,centerY,end.x,end.y),
+            right:this.getDistanceBetweenPoints(centerX+radius,centerY,end.x,end.y)};
+
+        var toAnt = {
+            up:this.getDistanceBetweenPoints(centerX,centerY-radius,this.x,this.y),
+            down:this.getDistanceBetweenPoints(centerX,centerY+radius,this.x,this.y),
+            left:this.getDistanceBetweenPoints(centerX-radius,centerY,this.x,this.y),
+            right:this.getDistanceBetweenPoints(centerX+radius,centerY,this.x,this.y)
+        }
 
         //for each quadron of the circle, we create a path to the end 
         //Top left of the circle
-        if(this.x <= centerX && this.y <= centerY){
+        if(this.x < centerX && this.y < centerY){
             console.log("Top left");
-            if(end.x >= centerX && end.y <= centerY){
-                console.log("Going to the top right");
-                speed = -0.5;}
-            if(distanceSommetAnt <= distanceCoteGaucheAnt && distanceCoteDroit <= distanceBas){
-                console.log("Going to the bottom right up");
-                speed = -0.5;
-            }
-            else{
-                console.log("Going to the bottom left or right down");
-                speed = 0.5;
-            }
 
+            //End of the path right up corner
+            if(end.x > centerX && end.y < centerY){
+                console.log("End right up corner");
+                speed = {x:-sp,y:-sp};}
+            //End of the path left down corner
+            else if(end.x < centerX && end.y > centerY){
+                console.log("End left down corner");
+                speed = {x:-sp,y:-sp};}
+
+            //Special end    
+            else if(toAnt.up <= toAnt.left && toEnd.right <= toEnd.down ){
+                console.log("The ant is closer to the top and the end is closer to the right"); 
+                speed = {x:-sp,y:-sp};}
+
+            else if(toAnt.left < toAnt.up && toEnd.down < toEnd.right){
+                console.log("The ant is closer to the left and the end is closer to the bottom");
+                speed = {x:-sp,y:sp};}
+
+            /*
+            else if(end.x < centerX && end.y < centerY){
+                console.log("End left up corner");
+                speed = {x:-sp,y:-sp};}*/
+
+            else{
+                console.log("else")
+                speed = {x:-sp,y:-sp};
+            }
 
         }
+        
 
         //Top right of the circle
-        if(this.x > centerX && this.y < centerY){
+        else if(this.x >= centerX && this.y < centerY){
             console.log("Top right");
-            if(end.x > centerX && end.y > centerY){
-                console.log("Going to the bottom right");
-                speed = 0.5;}
 
-            if(distanceCoteDroitAnt <= distanceSommetAnt && distanceBas <= distanceCoteGauche){
-                console.log("Going to the bottom left down");
-                speed = 0.5;
-            }
+            //End of the path right down corner
+            if(end.x > centerX && end.y > centerY){
+                console.log("End right down corner");
+                speed = {x:sp,y:-sp};}
+
+            //End of the path left up corner    
+            else if(end.x < centerX && end.y < centerY){
+                console.log("End left up corner");
+                speed = {x:sp,y:-sp};}
+
+            
+            else if(toAnt.right <= toAnt.up && toEnd.down <= toEnd.left ){
+                console.log("The ant is closer to the right and the end is closer to the bottom");
+                speed = {x:sp,y:sp};}
+
+            else if(toAnt.up <= toAnt.right && toEnd.left <= toEnd.down){
+                console.log("The ant is closer to the top and the end is closer to the left");
+                speed = {x:-sp,y:-sp};}
+
             else{
-                console.log("Going to the top left or bottom left up");
-                speed = -0.5;
+                console.log("else")
+                speed = {x:sp,y:-sp};
             }
+
         }
 
         //Bottom right of the circle
-        if(this.x >= centerX && this.y >= centerY){
+        else if(this.x > centerX && this.y > centerY){
             console.log("Bottom right");
+
+            //End of the path left down corner
             if(end.x < centerX && end.y > centerY){
-                console.log("Going to the bottom left");
-                speed = 0.5;}
+                console.log("End left down corner");
+                speed = {x:sp,y:sp};}
 
-            if(distanceBasAnt <= distanceCoteDroitAnt && distanceCoteGauche <= distanceSommet){
-                console.log("Going to the top left down");
-                speed = 0.5;
-            }
+            //End of the path right up corner
+            else if(end.x > centerX && end.y < centerY){
+                console.log("End right up corner");
+                speed = {x:sp,y:sp};}
 
+            else if(toAnt.down <= toAnt.right && toEnd.left <= toEnd.up ){
+                console.log("The ant is closer to the bottom and the end is closer to the left");
+                speed = {x:sp,y:sp};}
+
+            else if(toAnt.right < toAnt.down && toEnd.up < toEnd.left){
+                console.log("The ant is closer to the right and the end is closer to the top");
+                speed = {x:-sp,y:sp};}
+        
             else{
-                console.log("Going to the top right or top left up");
-                speed = -0.5;
+                console.log("else")
+                speed = {x:sp,y:sp};
             }
+
         }
 
         //Bottom left of the circle
-        if(this.x < centerX && this.y > centerY){
+        else if(this.x < centerX && this.y > centerY){
             console.log("Bottom left");
-            if(end.x <= centerX && end.y <= centerY){
-                console.log("Going to the top left");
-                speed = -0.5;}
 
-            if(distanceCoteGaucheAnt <= distanceBasAnt && distanceSommet <= distanceCoteDroit){
-                console.log("Going to the top right up");
-                speed = -0.5;
-            }
+            //End of the path left up corner
+            if(end.x < centerX && end.y < centerY){
+                console.log("End left up corner");
+                speed = {x:-sp,y:sp};}
+            
+            //End of the path right down corner
+            else if(end.x > centerX && end.y > centerY){
+                console.log("End right down corner");
+                speed = {x:-sp,y:sp};}
+
+            else if(toAnt.left <= toAnt.down && toEnd.up <= toEnd.right ){
+                console.log("The ant is closer to the left and the end is closer to the top");
+                speed = {x:-sp,y:-sp};}
+
+            else if(toAnt.down < toAnt.left && toEnd.right < toEnd.up){
+                console.log("The ant is closer to the bottom and the end is closer to the right");
+                speed = {x:sp,y:sp};}
+
             else{
-                console.log("Going to the bottom right or top right down");
-                speed = 0.5;
+                console.log("else")
+                speed = {x:-sp,y:sp};
             }
         }
+        
 
-        return speed;
-
+        this.speedX = speed.x;
+        this.speedY = speed.y;
     };
+
+    Ant.prototype.obstacleAura = function(Ant, obj, end, start){
+        var point = this.getPointCircle(obj);
+        var entryPoint = this.getEntryPoint(point);
+        var exitPoint = this.getExitPoint(point,end);
+        var compteurPlus = true;
+
+        if(entryPoint.index && entryPoint.index < point.length/2 && exitPoint.index >= point.length/2){}
+
+
+        if(compteurPlus){
+            if(entryPoint.index == point.length-1){
+                entryPoint.index = -1;
+            }
+            this.followN(point[entryPoint.index+1].x,point[entryPoint.index+1].y,ob);
+        }
+        else{
+            if(entryPoint.index == 0){
+                entryPoint.index = point.length;
+            }
+            this.followN(point[entryPoint.index-1].x,point[entryPoint.index-1].y,ob);
+        }
+
+    }
 
     return Ant;
 }());

@@ -86,6 +86,11 @@ let orientationDrawVertical;
 var ob;
 
 var endPath;
+var startPath;
+
+let specialAnt = 10;
+let shortestP = false;
+var dstanceFinish;
 
 /**
  * Handle the draw of the path made by the user on click / touch screen
@@ -113,6 +118,7 @@ function drawHandler() {
         draw = false;
         //save end of the path
         stockEndPath(d.clickX[d.clickX.length - 1], d.clickY[d.clickY.length - 1]);
+        stockStartPath(d.clickX[0], d.clickY[0]);
 
         orientationDrawVertical = (window.innerHeight > window.innerWidth) ? true : false;
         //add the first ant at the begining and on the page
@@ -320,10 +326,17 @@ function handleSize(){
     previousOrientation = currentOrientation;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function stockEndPath(x,y){
     endPath = {x: x, y: y};
     console.log(endPath);
 }
+
+function stockStartPath(x,y){
+    startPath = {x: x, y: y};
+    console.log(startPath);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 window.addEventListener("resize", () => {
 
@@ -368,6 +381,7 @@ function startAnts(First, Space, firstX, firstY) {
                 First.img.style.height = 80 + 'px';
                 First.img.style.transform = 'translateX(' + -50 + '%) translateY(' + -50 + '%) rotate(' + (0) + 'deg) ';
                 updateSample(First.distance);
+                distanceFinish = First.distance;
 
                 // évite d'afficher 1 millipns de path qaund différence minime
                 deltaPathLength = previousPathLength - First.distance;
@@ -382,9 +396,15 @@ function startAnts(First, Space, firstX, firstY) {
         }
         //Once the first ant stopped, run forever
     }
+
     else {
+        if(futurAnts[0].direct && !shortestP){
+            futurAnts[0].leader(First,ob,endPath,startPath);
+            shortestP = true;
+        }
+        else{futurAnts[0].followEnd(First,ob,endPath,startPath);}
         //new first follow the never changing First with special function with no slow
-        futurAnts[0].followEnd(First,ob,endPath);
+        
         //add a new ant every time the last one is farther than 'spacingAnt'
         if (Math.sqrt((futurAnts[futurAnts.length - 1].x - firstX) * (futurAnts[futurAnts.length - 1].x - firstX) + (futurAnts[futurAnts.length - 1].y - firstY) * (futurAnts[futurAnts.length - 1].y - firstY)) > spacingAnt) {
             if (compter == drawingGap) {
@@ -400,20 +420,36 @@ function startAnts(First, Space, firstX, firstY) {
                 // compter = 2;
                 drawingGap = Math.round(drawingGap * 2 - drawingGap / 2);
 
+                if(specialAnt == 10){
+                    futurAnts.push(new DirectAnt('./assets/buttonInfo.png', 30, 30, false));
+                    specialAnt = 0;
+                }
+                else{
+                    specialAnt++;
+                    if (drawAllPathOn) {
+                        // if (document.getElementById('drawMain').checked) {
+                        futurAnts.push(new DrawingAnt('./assets/RedAnt.png', 30, 30, true));
+                    }
+                    else {
+                        futurAnts.push(new DrawingAnt('./assets/RedAnt.png', 30, 30, false));
+                    }
+                }
 
                 // if(drawAllPathOn){
-                if (drawAllPathOn) {
-                    // if (document.getElementById('drawMain').checked) {
-                    futurAnts.push(new DrawingAnt('./assets/RedAnt.png', 30, 30, true));
-                }
-                else {
-                    futurAnts.push(new DrawingAnt('./assets/RedAnt.png', 30, 30, false));
-                }
+                
                 futurAnts[futurAnts.length - 1].move(firstX, firstY);
                 document.getElementById("playPanel").appendChild(futurAnts[futurAnts.length - 1].img);
             }
             else {
-                futurAnts.push(new DrawingAnt('./assets/ant.png', 30, 30, false));
+                if(specialAnt == 10){
+                    futurAnts.push(new DirectAnt('./assets/buttonInfo.png', 30, 30, false));
+                    specialAnt = 0;
+                }
+                else{
+                    specialAnt++;
+                    futurAnts.push(new DrawingAnt('./assets/ant.png', 30, 30, false));
+                }
+                
                 futurAnts[futurAnts.length - 1].move(firstX, firstY);
                 document.getElementById("playPanel").appendChild(futurAnts[futurAnts.length - 1].img);
             }
@@ -433,7 +469,8 @@ function startAnts(First, Space, firstX, firstY) {
         }
         //move all the other ants, from the closest to the farest
         for (var i_6 = 1; i_6 < futurAnts.length; i_6++) {
-            futurAnts[i_6].follow(futurAnts[i_6 - 1],endPath);
+            if(futurAnts[i_6].direct && !shortestP){futurAnts[i_6].leader(futurAnts[i_6 - 1],ob,endPath,startPath);}
+            else{futurAnts[i_6].follow(futurAnts[i_6 - 1],endPath,startPath);}
         }
     }
     //repeat the function
@@ -447,7 +484,7 @@ function startAnts(First, Space, firstX, firstY) {
 
 function delayFirst(Space, First, firstX, firstY) {
     //follow next point on the line
-    First.followN(Space.clickX[0], Space.clickY[0],ob,endPath);
+    First.followN(Space.clickX[0], Space.clickY[0],ob,endPath,startPath);
     //create a second ant to avoid bugs
     if (futurAnts.length == 0) {
         futurAnts.push(new DrawingAnt('./assets/RedAnt.png', 30, 30, true));
@@ -461,7 +498,7 @@ function delayFirst(Space, First, firstX, firstY) {
                 pathColorBlueValue = Math.min(255, pathColorBlueValue + 45);
             }
             else {
-                pathColorBlueValue = Math.max(0, pathColorBlueValue - 45);
+                  pathColorBlueValue = Math.max(0, pathColorBlueValue - 45);
                 pathColorGreenValue = Math.min(255, pathColorGreenValue + 45);
             }
             pathColorRedValue = Math.max(0, pathColorRedValue - 45);
@@ -490,9 +527,15 @@ function delayFirst(Space, First, firstX, firstY) {
         compter++;
     }
     //make other ants follow the first
-    futurAnts[0].follow(First,endPath);
+    if(futurAnts[0].direct && !shortestP){
+        futurAnts[0].leader(First,ob,endPath,startPath);
+        shortestP = true;
+    }
+    else{futurAnts[0].follow(First,endPath,startPath);}
+    
     for (var i_7 = 1; i_7 < futurAnts.length; i_7++) {
-        futurAnts[i_7].follow(futurAnts[i_7 - 1],endPath);
+        if(futurAnts[i_7].direct && !shortestP){futurAnts[i_7].leader(futurAnts[i_7 - 1],ob,endPath,startPath);}
+        else{futurAnts[i_7].follow(futurAnts[i_7 - 1],endPath,startPath);}
     }
 }
 
